@@ -133,6 +133,16 @@ app.post("/post-moisture",async(req,res)=>{
   catch{
     res.status(500).send('Error posting moisture data');
   }
+});
+
+app.get("/get-moisture",async(req,res)=>{
+  try{
+    const {train_id}=req.query;
+    results = await moisture.find({ name: new RegExp('^' + train_id, 'i'),email });
+  }
+  catch{
+    res.status(500).send('Error fetching moisture data');
+  }
 })
 
 // Route to verify train data
