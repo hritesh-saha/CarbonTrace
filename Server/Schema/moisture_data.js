@@ -1,12 +1,16 @@
 const mongoose=require("mongoose");
 
 const moistureSchema=new mongoose.Schema({
-    moisture:{
+    moisture_level:{
         type:Number,
         required:true
     },
     location:{
         type:String,
+        required:true
+    },
+    timestamp:{
+        type:Date,
         required:true
     }
 });
