@@ -102,8 +102,8 @@ app.post('/store-train-data', async (req, res) => {
 
 app.get("/get-train-data",async(req,res)=>{
   try{
-    const {train_id}=req.query;
-    const trainData=await train.find({train_id});
+    const {username}=req.query;
+    const trainData=await UserTracking.find({username});
     res.status(200).json(trainData);
   }
   catch{
