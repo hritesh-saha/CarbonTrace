@@ -1,14 +1,20 @@
-const mongoose = require('mongoose');
+// models/TrackingStatus.js
+const mongoose = require("mongoose");
 
-const userTrackingSchema = new mongoose.Schema({
-  username: { 
-    type: String,
-    required: true },
+const trackingStatusSchema = new mongoose.Schema({
   train_id: { 
-    type: Number,
-    required: true },
+    type: String,
+     required: true
+     },
+  username: { 
+    type: String, 
+    required: true
+   },
+  isTracking: { 
+    type: Boolean,
+     required: true
+     }
 });
 
-const UserTracking = mongoose.model('UserTracking_data', userTrackingSchema);
-
-module.exports = UserTracking;
+const trainAvail= mongoose.model("TrackingStatus", trackingStatusSchema);
+module.exports=trainAvail

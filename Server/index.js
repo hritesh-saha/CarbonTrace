@@ -305,22 +305,21 @@ app.post("/user-tracking", async (req, res) => {
   }
 });
 
-app.get("/user-tracking", async (req, res) => {
+app.get("/tracking-status", async (req, res) => {
   try {
-    const { username,train_id } = req.query;
+    const { username, train_id } = req.query;
 
-    const trackingEntry = await UserTracking.findOne({ username,train_id});
+    const trackingEntry = await UserTracking.findOne({ username, train_id });
     
     if (trackingEntry) {
-      res.json({ tracking: true });
+      res.json({ isTracking: trackingEntry.isTracking });
     } else {
-      res.json({ tracking: false });
+      res.json({ isTracking: false });
     }
   } catch (error) {
     return res.status(500).json({ error: "Unable to check tracking status!" });
   }
 });
-
 
 app.delete("/user-untracking", async (req, res) => {
   try {
@@ -341,7 +340,8 @@ app.delete("/user-untracking", async (req, res) => {
       return res.status(404).json({ message: `No tracking entry found for user ${username} and train ${train_id}.` });
     }
 
-    res.json({ message: `User ${username} has stopped tracking train ${train_id}.` });
+    res.json({ message: `User ${username} has stopped tracking train ${train_id}.`,
+      isTracking: trackingEntry.isTracking });
   } catch (error) {
     console.error(error);
     return res.status(500).json({ error: "Unable to untrack!" });
