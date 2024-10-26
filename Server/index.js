@@ -292,10 +292,15 @@ app.post("/user-tracking", async (req, res) => {
       return res.status(401).json({ error: "User not found" });
     }
 
-    
+    // Find existing tracking entry
     let trackingEntry = await UserTracking.findOne({ username, train_id });
     if (!trackingEntry) {
-      trackingEntry = new UserTracking({ username, train_id });
+      // Create a new tracking entry and set isTracking to true
+      trackingEntry = new UserTracking({ username, train_id, isTracking: true });
+      await trackingEntry.save();
+    } else {
+      // If the entry already exists, update isTracking to true
+      trackingEntry.isTracking = true;
       await trackingEntry.save();
     }
 
@@ -304,6 +309,7 @@ app.post("/user-tracking", async (req, res) => {
     return res.status(500).json({ error: "Unable to Track!" });
   }
 });
+
 
 app.get("/tracking-status", async (req, res) => {
   try {
