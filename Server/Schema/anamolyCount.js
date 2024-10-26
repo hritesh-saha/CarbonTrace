@@ -1,6 +1,10 @@
 const mongoose = require("mongoose");
 
 const anomalyCountSchema = new mongoose.Schema({
+  train_id:{
+    type:Number,
+    required:true
+  },
   date: {
     type: String,
     required: true,
@@ -11,5 +15,5 @@ const anomalyCountSchema = new mongoose.Schema({
     default: 1,
   },
 });
-
-module.exports = mongoose.model("AnomalyCount", anomalyCountSchema);
+const AnomalyCount=mongoose.model("AnomalyCount", anomalyCountSchema);
+module.exports =AnomalyCount

@@ -15,7 +15,7 @@ const signUp = require("./Schema/signup");
 const train=require("./Schema/train_data");
 const UserTracking = require("./Schema/userTracking");
 const moisture=require("./Schema/moisture_data");
-const AnomalyCount = require("./Schema/anamolyCount");
+const AnomalyCount=require("./Schema/anamolyCount");
 const db = mongoose.connection;
 
 
@@ -265,9 +265,15 @@ app.post("/anomaly-detected", async (req, res) => {
   
       if (anomalyEntry) {
         anomalyEntry.count += 1;
+        anomalyEntry.train_id=train_id;
         await anomalyEntry.save();
       } else {
-        await AnomalyCount.create({ date: today, count: 1 });
+        const data=new AnomalyCount({
+          date: today,
+          count: 1,
+          train_id:train_id
+        });
+        await data.save();
       }
     }
 
@@ -276,6 +282,18 @@ app.post("/anomaly-detected", async (req, res) => {
     return res.status(500).json({ error: "Unable to Detect Anomaly!" });
   }
 });
+
+app.get("/get-Anamoly-count",async(req,res)=>{
+  try{
+    const {train_id}=req.query;
+    //const results = await AnomalyCount.find({ name: new RegExp('^' + query, 'i'),email });
+    const results = await AnomalyCount.find({train_id});
+    res.json(results);
+  }
+  catch{
+    return res.status(500).json({ error: "Unable to get Anomaly count!" });
+  }
+})
 
 
 app.listen(port, () => {
