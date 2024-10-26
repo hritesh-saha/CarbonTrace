@@ -295,6 +295,23 @@ app.post("/user-tracking", async (req, res) => {
   }
 });
 
+app.get("/user-tracking", async (req, res) => {
+  try {
+    const { username } = req.query;
+
+    const trackingEntry = await UserTracking.findOne({ username });
+    
+    if (trackingEntry) {
+      res.json({ tracking: true });
+    } else {
+      res.json({ tracking: false });
+    }
+  } catch (error) {
+    return res.status(500).json({ error: "Unable to check tracking status!" });
+  }
+});
+
+
 app.delete("/user-untracking", async (req, res) => {
   try {
     const { username, train_id } = req.body;
