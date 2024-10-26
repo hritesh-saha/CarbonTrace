@@ -16,6 +16,7 @@ const train=require("./Schema/train_data");
 const UserTracking = require("./Schema/userTracking");
 const moisture=require("./Schema/moisture_data");
 const AnomalyCount=require("./Schema/anamolyCount");
+const trainAvail=require("./Schema/trainAvailable");
 const db = mongoose.connection;
 
 
@@ -111,6 +112,29 @@ app.get("/get-train-data",async(req,res)=>{
     res.status(500).send('Error fetching train data');
   }
 });
+app.post("/add-train",async(req,res)=>{
+  try{
+    const { train_id, train_name, departure, arrival } = req.body;
+
+    // Validation check for required fields
+    if (!train_id || !train_name || !departure || !arrival) {
+        return res.status(400).json({ message: "All fields are required" });
+    }
+
+    
+        const newTrain = new trainAvail({
+            train_id,
+            train_name,
+            departure,
+            arrival
+        });
+        const savedTrain = await newTrain.save();
+        res.status(201).json({ message: "Train added successfully", train: savedTrain });
+  }
+  catch{
+    res.status(500).send('Error adding train');
+  }
+})
 
 app.post("/post-moisture",async(req,res)=>{
   try{
