@@ -297,9 +297,9 @@ app.post("/user-tracking", async (req, res) => {
 
 app.get("/user-tracking", async (req, res) => {
   try {
-    const { username } = req.query;
+    const { username,train_id } = req.query;
 
-    const trackingEntry = await UserTracking.findOne({ username });
+    const trackingEntry = await UserTracking.findOne({ username,train_id});
     
     if (trackingEntry) {
       res.json({ tracking: true });
