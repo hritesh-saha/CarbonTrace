@@ -134,6 +134,11 @@ app.post("/add-train",async(req,res)=>{
   catch{
     res.status(500).send('Error adding train');
   }
+});
+
+app.get("/get-train",async(req,res)=>{
+  const data=await trainAvail.find();
+  return res.status(200).json(data);
 })
 
 app.post("/post-moisture",async(req,res)=>{
