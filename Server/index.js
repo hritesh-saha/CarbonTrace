@@ -113,7 +113,7 @@ app.get("/get-train-data",async(req,res)=>{
 
 app.post("/post-moisture",async(req,res)=>{
   try{
-    const {moisture_level,location}=req.body;
+    const {train_id,moisture_level,location}=req.body;
     const timestamp=new Date().toLocaleDateString('en-CA',{ 
       hour: '2-digit', 
       minute: '2-digit', 
@@ -121,12 +121,13 @@ app.post("/post-moisture",async(req,res)=>{
       hour12: false 
     });
     const moistureData=new moisture({
+      train_id,
       moisture_level,
       location,
       timestamp
       });
     await moistureData.save();
-    res.json({ message: 'Moisture data stored successfully', moisture_level, location, timestamp });
+    res.json({ message: 'Moisture data stored successfully', train_id, moisture_level, location, timestamp });
   }
   catch{
     res.status(500).send('Error posting moisture data');
