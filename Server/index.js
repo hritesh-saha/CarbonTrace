@@ -170,6 +170,8 @@ app.get("/get-moisture", async (req, res) => {
   try {
     const { train_id, timestamp } = req.query;
 
+    const trainIdString = String(train_id);
+
     // Parse the timestamp from the query to a Date object
     const date = new Date(timestamp);
 
@@ -177,13 +179,19 @@ app.get("/get-moisture", async (req, res) => {
     const startOfDay = new Date(date.setUTCHours(0, 0, 0, 0));
     const endOfDay = new Date(date.setUTCHours(23, 59, 59, 999));
 
-    // Use the correct field (timestamp) and add a train_id filter
     const results = await moisture.find({
-      train_id: train_id,
+      train_id: trainIdString,
       timestamp: { $gte: startOfDay, $lte: endOfDay }
     });
 
-    res.status(200).json(results);
+    const formattedResults = results.map(record => ({
+      train_id: parseInt(record.train_id, 10),
+      moisture_level: parseInt(record.moisture_level, 10),
+      location: record.location,
+      timestamp: record.timestamp
+    }));
+
+    res.status(200).json(formattedResults);
   } catch (error) {
     console.error(error);
     res.status(500).send("Error fetching moisture data");

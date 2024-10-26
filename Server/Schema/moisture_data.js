@@ -2,11 +2,11 @@ const mongoose=require("mongoose");
 
 const moistureSchema=new mongoose.Schema({
     train_id:{
-        type:Number,
+        type:String,
         required:true
     },
     moisture_level:{
-        type:Number,
+        type:String,
         required:true
     },
     location:{
