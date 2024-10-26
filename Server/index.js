@@ -355,59 +355,6 @@ app.delete("/user-untracking", async (req, res) => {
 });
 
 
-
-app.post("/anomaly-detected", async (req, res) => {
-  try {
-    const { train_id, anomaly_details } = req.body;
-    if (!train_id || !anomaly_details) {
-      return res.status(400).send({ message: "Please enter both train id and anomaly details" });
-    }
-
-    const usersTracking = await UserTracking.find({ train_id });
-
-    if (usersTracking.length > 0) {
-      console.log(usersTracking);
-      for (const trackingEntry of usersTracking) {
-        const transporter = nodemailer.createTransport({
-          service: "Gmail",
-          auth: {
-            user: process.env.USER,
-            pass: process.env.PASS,
-          },
-        });
-
-        const mailOptions = {
-          from: process.env.USER,
-          to: trackingEntry.username,
-          subject: "Anomaly Detected!",
-          text: `${anomaly_details}`,
-        };
-
-        await transporter.sendMail(mailOptions);
-      }
-      const today = new Date().toISOString().split("T")[0];
-      const anomalyEntry = await AnomalyCount.findOne({ date: today });
-  
-      if (anomalyEntry) {
-        anomalyEntry.count += 1;
-        anomalyEntry.train_id=train_id;
-        await anomalyEntry.save();
-      } else {
-        const data=new AnomalyCount({
-          date: today,
-          count: 1,
-          train_id:train_id
-        });
-        await data.save();
-      }
-    }
-
-    res.json({ message: 'Anomaly detected and users notified.', anomaly_details });
-  } catch (error) {
-    return res.status(500).json({ error: "Unable to Detect Anomaly!" });
-  }
-});
-
 app.post("/anomaly-detected", async (req, res) => {
   try {
     const { train_id, anomaly_details } = req.body;
