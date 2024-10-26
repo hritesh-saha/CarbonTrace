@@ -340,23 +340,20 @@ app.delete("/user-untracking", async (req, res) => {
       return res.status(401).json({ error: "User not found" });
     }
 
-    // Find the tracking entry to update
-    const trackingEntry = await UserTracking.findOne({ username, train_id });
+    // Find the tracking entry to delete
+    const trackingEntry = await UserTracking.findOneAndDelete({ username, train_id });
     if (!trackingEntry) {
       return res.status(404).json({ message: `No tracking entry found for user ${username} and train ${train_id}.` });
     }
 
-    // Update isTracking to false
-    trackingEntry.isTracking = false;
-    await trackingEntry.save();
-
-    res.json({ message: `User ${username} has stopped tracking train ${train_id}.`,
-      isTracking: trackingEntry.isTracking });
+    // Since the entry was deleted, isTracking is now false
+    res.json({ message: `User ${username} has stopped tracking train ${train_id}.`, isTracking: false });
   } catch (error) {
     console.error(error);
     return res.status(500).json({ error: "Unable to untrack!" });
   }
 });
+
 
 
 app.post("/anomaly-detected", async (req, res) => {
