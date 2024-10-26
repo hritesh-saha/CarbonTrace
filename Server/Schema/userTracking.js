@@ -1,4 +1,3 @@
-// userTrackingModel.js
 const mongoose = require('mongoose');
 
 const userTrackingSchema = new mongoose.Schema({

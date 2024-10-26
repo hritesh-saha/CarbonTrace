@@ -15,6 +15,7 @@ const signUp = require("./Schema/signup");
 const train=require("./Schema/train_data");
 const UserTracking = require("./Schema/userTracking");
 const moisture=require("./Schema/moisture_data");
+const AnomalyCount = require("./Schema/anamolyCount");
 const db = mongoose.connection;
 
 
@@ -258,6 +259,15 @@ app.post("/anomaly-detected", async (req, res) => {
         };
 
         await transporter.sendMail(mailOptions);
+      }
+      const today = new Date().toISOString().split("T")[0];
+      const anomalyEntry = await AnomalyCount.findOne({ date: today });
+  
+      if (anomalyEntry) {
+        anomalyEntry.count += 1;
+        await anomalyEntry.save();
+      } else {
+        await AnomalyCount.create({ date: today, count: 1 });
       }
     }
 
