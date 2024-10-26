@@ -406,7 +406,9 @@ app.post("/anomaly-detected", async (req, res) => {
   } catch (error) {
     return res.status(500).json({ error: "Unable to Detect Anomaly!" });
   }
-});app.post("/anomaly-detected", async (req, res) => {
+});
+
+app.post("/anomaly-detected", async (req, res) => {
   try {
     const { train_id, anomaly_details } = req.body;
     if (!train_id || !anomaly_details) {
