@@ -141,28 +141,38 @@ app.get("/get-train",async(req,res)=>{
   return res.status(200).json(data);
 })
 
-app.post("/post-moisture",async(req,res)=>{
-  try{
-    const {train_id,moisture_level,location}=req.body;
-    const timestamp=new Date().toLocaleDateString('en-CA',{ 
-      hour: '2-digit', 
-      minute: '2-digit', 
-      second: '2-digit', 
-      hour12: false 
+app.post("/post-moisture", async (req, res) => {
+  try {
+    const { train_id, moisture_level, location } = req.body;
+
+    // Generate timestamp in the 'YYYY-MM-DD HH:MM:SS' format
+    const timestamp = new Date().toLocaleDateString('en-CA', {
+      hour: '2-digit',
+      minute: '2-digit',
+      second: '2-digit',
+      hour12: false
     });
-    train_id = parseInt(train_id, 10);
-    moisture_level = parseInt(moisture_level, 10);
-    const moistureData=new moisture({
+
+    // Create a new instance of moisture data
+    const moistureData = new moisture({
       train_id,
       moisture_level,
       location,
       timestamp
-      });
+    });
+
+    // Save the data to MongoDB
     await moistureData.save();
-    res.json({ message: 'Moisture data stored successfully', train_id, moisture_level, location, timestamp });
-  }
-  catch{
-    res.status(500).send('Error posting moisture data');
+
+    res.json({
+      message: 'Moisture data stored successfully',
+      train_id,
+      moisture_level,
+      location,
+      timestamp
+    });
+  } catch (error) {
+    res.status(500).json({ error: 'Error posting moisture data', details: error.message });
   }
 });
 
