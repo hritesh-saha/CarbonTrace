@@ -14,6 +14,7 @@ const port = process.env.PORT;
 const signUp = require("./Schema/signup");
 const train=require("./Schema/train_data");
 const UserTracking = require("./Schema/userTracking");
+const moisture=require("./Schema/moisture_data");
 const db = mongoose.connection;
 
 
@@ -73,17 +74,16 @@ const contract = new ethers.Contract(contractAddress, abi, wallet);*/}
 app.post('/store-train-data', async (req, res) => {
   try {
     // Extract data from the request body
-    const { trainNumber, trainWeight,timestamp } = req.body;
+    const { train_id, train_weight,train_arrival } = req.body;
 
-    if (!trainNumber || !trainWeight) {
+    if (!train_id || !train_weight) {
       return res.status(400).json({ message: 'Missing trainNumber, trainWeight, or timestamp' });
     }
-    //const timestamp=new Date().toLocaleDateString('en-CA', { hour12: false });
 
     const trainData=new train({
-      train_id:trainNumber,
-      train_weight:trainWeight,
-      train_arrival:timestamp,
+      train_id,
+      train_weight,
+      train_arrival,
     });
     await trainData.save();
 
@@ -93,12 +93,39 @@ app.post('/store-train-data', async (req, res) => {
     //console.log('Train data stored on the blockchain.');
 
     // Send a response confirming storage
-    res.json({ message: 'Train data stored on the blockchain!', trainNumber, trainWeight, timestamp });
+    res.json({ message: 'Train data stored on the blockchain!', train_id, train_weight, timestamp });
   } catch (error) {
     console.error('Error storing train data:', error);
     res.status(500).send('Error storing train data');
   }
 });
+
+app.get("/get-train-data",async(req,res)=>{
+  try{
+    const {train_id}=req.query;
+    const trainData=await train.find({train_id});
+    res.status(200).json(trainData);
+  }
+  catch{
+    res.status(500).send('Error fetching train data');
+  }
+});
+
+app.post("/post-moisture",async(req,res)=>{
+  try{
+    const {moisture,location}=req.body;
+    const timestamp=new Date().toLocaleDateString('en-CA',{ 
+      hour: '2-digit', 
+      minute: '2-digit', 
+      second: '2-digit', 
+      hour12: false 
+    });
+
+  }
+  catch{
+    res.status(500).send('Error posting moisture data');
+  }
+})
 
 // Route to verify train data
 {/*app.post('/verify-train-data', async (req, res) => {
@@ -153,10 +180,7 @@ app.post("/signup", async (req, res) => {
 
 app.post("/login", async (req, res) => {
   try {
-    const { username, password, confirmPassword } = req.body;
-    if (password !== confirmPassword) {
-      return res.status(400).send({ message: "Passwords are not matching" });
-    }
+    const { username, password} = req.body;
     const user = await signUp.findOne({ username });
     if (!user) {
       res.status(401).json({ error: "User not Found." });
