@@ -17,5 +17,5 @@ const trackingStatusSchema = new mongoose.Schema({
 });
 
 
-const trainAvail= mongoose.model("TrackingStatus", trackingStatusSchema);
-module.exports=trainAvail
+const UserTracking= mongoose.model("TrackingStatus", trackingStatusSchema);
+module.exports=UserTracking
