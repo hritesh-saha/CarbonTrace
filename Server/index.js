@@ -358,56 +358,65 @@ app.delete("/user-untracking", async (req, res) => {
 app.post("/anomaly-detected", async (req, res) => {
   try {
     const { train_id, anomaly_details } = req.body;
+    
+    // Validate input
     if (!train_id || !anomaly_details) {
       return res.status(400).send({ message: "Please enter both train id and anomaly details" });
     }
 
-    const usersTracking = await UserTracking.find({ train_id });
+    // Fetch users tracking the specific train
+    const usersTracking = await UserTracking.find({ train_id, isTracking: true });
+    console.log("Users Tracking Found:", usersTracking);
 
     if (usersTracking.length > 0) {
-      console.log(usersTracking);
-      for (const trackingEntry of usersTracking) {
-        const transporter = nodemailer.createTransport({
-          service: "Gmail",
-          auth: {
-            user: process.env.USER,
-            pass: process.env.PASS,
-          },
-        });
+      // Set up email transporter once
+      const transporter = nodemailer.createTransport({
+        service: "Gmail",
+        auth: {
+          user: process.env.USER,
+          pass: process.env.PASS,
+        },
+      });
 
+      // Send email to each user in usersTracking
+      for (const trackingEntry of usersTracking) {
         const mailOptions = {
           from: process.env.USER,
           to: trackingEntry.username,
           subject: "Anomaly Detected!",
-          text: `${anomaly_details}`,
+          text: anomaly_details,
         };
-
-        await transporter.sendMail(mailOptions);
+        try {
+          await transporter.sendMail(mailOptions);
+          console.log(`Email sent to: ${trackingEntry.username}`);
+        } catch (emailError) {
+          console.error(`Error sending email to ${trackingEntry.username}:`, emailError);
+        }
       }
 
+      // Record anomaly in the database
       const today = new Date().toISOString().split("T")[0];
-      const anomalyEntry = await AnomalyCount.findOne({ date: today, train_id });
 
-      if (anomalyEntry) {
-        anomalyEntry.count += 1;
-        anomalyEntry.anomaly_details = anomaly_details;
-        await anomalyEntry.save();
-      } else {
-        const data = new AnomalyCount({
-          date: today,
-          count: 1,
-          train_id: train_id,
-          anomaly_details: anomaly_details,
-        });
-        await data.save();
-      }
+      // Use findOneAndUpdate to avoid duplicate key errors
+      await AnomalyCount.findOneAndUpdate(
+        { date: today, train_id: train_id },
+        { $inc: { count: 1 }, anomaly_details: anomaly_details }, // Increment count if it exists
+        { upsert: true, new: true } // Create a new document if none exists
+      );
+
+      console.log("Anomaly count updated in database");
+    } else {
+      console.log("No users found tracking the specified train ID.");
     }
 
     res.json({ message: "Anomaly detected and users notified.", anomaly_details });
   } catch (error) {
+    console.error("Error detecting anomaly:", error);
     return res.status(500).json({ error: "Unable to Detect Anomaly!" });
   }
 });
+
+
 
 
 app.get("/anomaly-detected-notify", async (req, res) => {
