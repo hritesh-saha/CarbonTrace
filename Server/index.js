@@ -138,7 +138,8 @@ app.post("/post-moisture",async(req,res)=>{
 app.get("/get-moisture",async(req,res)=>{
   try{
     const {train_id,timestamp}=req.query;
-    results = await moisture.find({ name: new RegExp('^' + timestamp, 'i'),email });
+    const results = await moisture.find({ name: new RegExp('^' + timestamp, 'i'),email });
+    res.status(200).json(results);
   }
   catch{
     res.status(500).send('Error fetching moisture data');
