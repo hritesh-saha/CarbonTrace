@@ -14,6 +14,10 @@ const anomalyCountSchema = new mongoose.Schema({
     type: Number,
     default: 1,
   },
+  anomaly_details:{
+    type:String,
+    required:true
+  }
 });
 const AnomalyCount=mongoose.model("AnomalyCount", anomalyCountSchema);
 module.exports =AnomalyCount

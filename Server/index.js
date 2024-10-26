@@ -406,43 +406,81 @@ app.post("/anomaly-detected", async (req, res) => {
   } catch (error) {
     return res.status(500).json({ error: "Unable to Detect Anomaly!" });
   }
-});
-
-app.post("/anomaly-detected-notify",async(req,res)=>{
-  try{
+});app.post("/anomaly-detected", async (req, res) => {
+  try {
     const { train_id, anomaly_details } = req.body;
     if (!train_id || !anomaly_details) {
       return res.status(400).send({ message: "Please enter both train id and anomaly details" });
     }
 
     const usersTracking = await UserTracking.find({ train_id });
+
     if (usersTracking.length > 0) {
       console.log(usersTracking);
+      for (const trackingEntry of usersTracking) {
+        const transporter = nodemailer.createTransport({
+          service: "Gmail",
+          auth: {
+            user: process.env.USER,
+            pass: process.env.PASS,
+          },
+        });
+
+        const mailOptions = {
+          from: process.env.USER,
+          to: trackingEntry.username,
+          subject: "Anomaly Detected!",
+          text: `${anomaly_details}`,
+        };
+
+        await transporter.sendMail(mailOptions);
+      }
 
       const today = new Date().toISOString().split("T")[0];
-      const anomalyEntry = await AnomalyCount.findOne({ date: today });
+      const anomalyEntry = await AnomalyCount.findOne({ date: today, train_id });
 
       if (anomalyEntry) {
         anomalyEntry.count += 1;
-        anomalyEntry.train_id = train_id;
+        anomalyEntry.anomaly_details = anomaly_details;
         await anomalyEntry.save();
       } else {
         const data = new AnomalyCount({
           date: today,
           count: 1,
           train_id: train_id,
+          anomaly_details: anomaly_details,
         });
         await data.save();
       }
     }
 
-    // Send anomaly details in the response
-    res.json({ message: 'Anomaly detected.', anomaly_details });
-  }
-  catch{
+    res.json({ message: "Anomaly detected and users notified.", anomaly_details });
+  } catch (error) {
     return res.status(500).json({ error: "Unable to Detect Anomaly!" });
   }
-})
+});
+
+
+app.get("/anomaly-detected-notify", async (req, res) => {
+  try {
+    // Get the most recent anomaly entry based on date and train ID if specified
+    const latestAnomaly = await AnomalyCount.findOne().sort({ date: -1 });
+
+    if (latestAnomaly && latestAnomaly.anomaly_details) {
+      res.json({
+        message: "Anomaly notification",
+        train_id: latestAnomaly.train_id,
+        anomaly_details: latestAnomaly.anomaly_details,
+      });
+    } else {
+      res.json({ message: "No new anomalies detected." });
+    }
+  } catch (error) {
+    console.error("Error retrieving anomaly:", error);
+    res.status(500).json({ error: "Error retrieving anomaly details" });
+  }
+});
+
 
 app.get("/get-Anamoly-count",async(req,res)=>{
   try{
