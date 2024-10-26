@@ -121,6 +121,8 @@ app.post("/post-moisture",async(req,res)=>{
       second: '2-digit', 
       hour12: false 
     });
+    train_id = parseInt(train_id, 10);
+    moisture_level = parseInt(moisture_level, 10);
     const moistureData=new moisture({
       train_id,
       moisture_level,
