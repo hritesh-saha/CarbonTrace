@@ -28,7 +28,7 @@ app.use(bodyParser.json());
 app.use(
   cors({
     origin: true,
-    methods: ["GET","POST","PUT"],
+    methods: ["GET","POST","PUT","DELETE"],
     allowedHeaders: "*",
     credentials: true,
   })
@@ -294,6 +294,33 @@ app.post("/user-tracking", async (req, res) => {
     return res.status(500).json({ error: "Unable to Track!" });
   }
 });
+
+app.delete("/user-untracking", async (req, res) => {
+  try {
+    const { username, train_id } = req.body;
+    if (!username || !train_id) {
+      return res.status(400).send({ message: "Please enter both username and train id" });
+    }
+
+    // Check if the user exists
+    const user = await signUp.findOne({ username });
+    if (!user) {
+      return res.status(401).json({ error: "User not found" });
+    }
+
+    // Find the tracking entry to delete
+    const trackingEntry = await UserTracking.findOneAndDelete({ username, train_id });
+    if (!trackingEntry) {
+      return res.status(404).json({ message: `No tracking entry found for user ${username} and train ${train_id}.` });
+    }
+
+    res.json({ message: `User ${username} has stopped tracking train ${train_id}.` });
+  } catch (error) {
+    console.error(error);
+    return res.status(500).json({ error: "Unable to untrack!" });
+  }
+});
+
 
 app.post("/anomaly-detected", async (req, res) => {
   try {
