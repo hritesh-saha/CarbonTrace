@@ -135,16 +135,30 @@ app.post("/post-moisture",async(req,res)=>{
   }
 });
 
-app.get("/get-moisture",async(req,res)=>{
-  try{
-    const {train_id,timestamp}=req.query;
-    const results = await moisture.find({ name: new RegExp('^' + timestamp, 'i'),email });
+app.get("/get-moisture", async (req, res) => {
+  try {
+    const { train_id, timestamp } = req.query;
+
+    // Parse the timestamp from the query to a Date object
+    const date = new Date(timestamp);
+
+    // Set the start and end range to match the entire day
+    const startOfDay = new Date(date.setUTCHours(0, 0, 0, 0));
+    const endOfDay = new Date(date.setUTCHours(23, 59, 59, 999));
+
+    // Use the correct field (timestamp) and add a train_id filter
+    const results = await moisture.find({
+      train_id: train_id,
+      timestamp: { $gte: startOfDay, $lte: endOfDay }
+    });
+
     res.status(200).json(results);
+  } catch (error) {
+    console.error(error);
+    res.status(500).send("Error fetching moisture data");
   }
-  catch{
-    res.status(500).send('Error fetching moisture data');
-  }
-})
+});
+
 
 // Route to verify train data
 {/*app.post('/verify-train-data', async (req, res) => {
