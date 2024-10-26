@@ -408,6 +408,42 @@ app.post("/anomaly-detected", async (req, res) => {
   }
 });
 
+app.post("/anomaly-detected-notify",async(req,res)=>{
+  try{
+    const { train_id, anomaly_details } = req.body;
+    if (!train_id || !anomaly_details) {
+      return res.status(400).send({ message: "Please enter both train id and anomaly details" });
+    }
+
+    const usersTracking = await UserTracking.find({ train_id });
+    if (usersTracking.length > 0) {
+      console.log(usersTracking);
+
+      const today = new Date().toISOString().split("T")[0];
+      const anomalyEntry = await AnomalyCount.findOne({ date: today });
+
+      if (anomalyEntry) {
+        anomalyEntry.count += 1;
+        anomalyEntry.train_id = train_id;
+        await anomalyEntry.save();
+      } else {
+        const data = new AnomalyCount({
+          date: today,
+          count: 1,
+          train_id: train_id,
+        });
+        await data.save();
+      }
+    }
+
+    // Send anomaly details in the response
+    res.json({ message: 'Anomaly detected.', anomaly_details });
+  }
+  catch{
+    return res.status(500).json({ error: "Unable to Detect Anomaly!" });
+  }
+})
+
 app.get("/get-Anamoly-count",async(req,res)=>{
   try{
     const {train_id}=req.query;
