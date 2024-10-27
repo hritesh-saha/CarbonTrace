@@ -359,7 +359,7 @@ app.delete("/user-untracking", async (req, res) => {
 app.post("/anomaly-detected", async (req, res) => {
   try {
     const { train_id, anomaly_details } = req.body;
-    
+
     // Validate input
     if (!train_id || !anomaly_details) {
       return res.status(400).send({ message: "Please enter both train id and anomaly details" });
@@ -396,20 +396,21 @@ app.post("/anomaly-detected", async (req, res) => {
       }
 
       // Record anomaly in the database
-      const today = new Date().toISOString().split("T")[0];
+      const now = new Date();
+      const formattedDate = now.toISOString().split("T")[0]; // YYYY-MM-DD
+      const formattedTime = now.toTimeString().split(" ")[0]; // HH:MM:SS
 
-      // Use findOneAndUpdate to avoid duplicate key errors
+      // Use findOneAndUpdate to avoid duplicate key errors for AnomalyCount
       await AnomalyCount.findOneAndUpdate(
-        { date: today, train_id: train_id },
+        { date: formattedDate, train_id: train_id },
         { $inc: { count: 1 }, anomaly_details: anomaly_details }, // Increment count if it exists
         { upsert: true, new: true } // Create a new document if none exists
       );
 
-      const now = new Date();
-      const formattedDate=now.toTimeString().split(" ")[0];
+      // Update AnomalyNotify with full date and time
       await AnomalyNotify.findOneAndUpdate(
-        { date: formattedDate, train_id: train_id },
-        { anomaly_details: anomaly_details }, // Increment count if it exists
+        { date: formattedDate, train_id: train_id }, // Using date as YYYY-MM-DD for grouping
+        { anomaly_details: anomaly_details, time: formattedTime }, // Store full time separately
         { upsert: true, new: true } // Create a new document if none exists
       );
 
@@ -424,6 +425,7 @@ app.post("/anomaly-detected", async (req, res) => {
     return res.status(500).json({ error: "Unable to Detect Anomaly!" });
   }
 });
+
 
 
 
