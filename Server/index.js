@@ -404,9 +404,11 @@ app.post("/anomaly-detected", async (req, res) => {
         { $inc: { count: 1 }, anomaly_details: anomaly_details }, // Increment count if it exists
         { upsert: true, new: true } // Create a new document if none exists
       );
-      const formattedDate=new Date().toISOString();
+
+      const now = new Date();
+      const formattedDate=now.toTimeString().split(" ")[0];
       await AnomalyNotify.findOneAndUpdate(
-        { date: today, train_id: train_id },
+        { date: formattedDate, train_id: train_id },
         { anomaly_details: anomaly_details }, // Increment count if it exists
         { upsert: true, new: true } // Create a new document if none exists
       );
