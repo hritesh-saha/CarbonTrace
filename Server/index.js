@@ -38,7 +38,8 @@ app.use(
 const initializenotifyState = async () => {
   const state = await notifyState.findOne();
   if (!state) {
-    await notifyState.create();
+    const data=new notifyState({ lastCheckedDate: new Date() });
+    await data.save();
   }
 };
 
