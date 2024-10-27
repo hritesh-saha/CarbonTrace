@@ -14,5 +14,5 @@ const anomalyNotifySchema = new mongoose.Schema({
     required:true
   }
 });
-const AnomalyNotify=mongoose.model("AnomalyCount", anomalyNotifySchema);
+const AnomalyNotify=mongoose.model("AnomalyNotify", anomalyNotifySchema);
 module.exports =AnomalyNotify
