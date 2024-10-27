@@ -38,7 +38,7 @@ app.use(
 const initializenotifyState = async () => {
   const state = await notifyState.findOne();
   if (!state) {
-    await notifyState.create({ lastCheckedDate: null });
+    await notifyState.create();
   }
 };
 
@@ -439,7 +439,7 @@ app.post("/anomaly-detected", async (req, res) => {
 app.get("/anomaly-detected-notify", async (req, res) => {
   try {
     // Ensure the notifyState is initialized
-    //await initializenotifyState();
+    await initializenotifyState();
 
     // Get the most recent anomaly entry based on date
     const latestAnomaly = await AnomalyNotify.findOne().sort({ date: -1 });
