@@ -17,6 +17,7 @@ const UserTracking = require("./Schema/userTracking");
 const moisture=require("./Schema/moisture_data");
 const AnomalyCount=require("./Schema/anamolyCount");
 const trainAvail=require("./Schema/trainAvailable");
+const AnomalyNotify=require("./Schema/anomalyNotify");
 const db = mongoose.connection;
 
 
@@ -403,6 +404,12 @@ app.post("/anomaly-detected", async (req, res) => {
         { $inc: { count: 1 }, anomaly_details: anomaly_details }, // Increment count if it exists
         { upsert: true, new: true } // Create a new document if none exists
       );
+      const formattedDate=new Date().toISOString();
+      await AnomalyNotify.findOneAndUpdate(
+        { date: today, train_id: train_id },
+        { anomaly_details: anomaly_details }, // Increment count if it exists
+        { upsert: true, new: true } // Create a new document if none exists
+      );
 
       console.log("Anomaly count updated in database");
     } else {
@@ -421,7 +428,7 @@ app.post("/anomaly-detected", async (req, res) => {
 app.get("/anomaly-detected-notify", async (req, res) => {
   try {
     // Get the most recent anomaly entry based on date
-    const latestAnomaly = await AnomalyCount.findOne().sort({ date: -1 });
+    const latestAnomaly = await AnomalyNotify.findOne().sort({ date: -1 });
 
     if (latestAnomaly) {
       res.json({
