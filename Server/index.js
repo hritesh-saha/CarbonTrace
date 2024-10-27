@@ -103,7 +103,6 @@ app.post('/store-train-data', async (req, res) => {
     //await tx.wait(); // Wait for transaction confirmation
     //console.log('Train data stored on the blockchain.');
 
-    // Send a response confirming storage
     res.json({ message: 'Train data stored on the blockchain!', train_id, train_weight, timestamp });
   } catch (error) {
     console.error('Error storing train data:', error);
@@ -125,7 +124,6 @@ app.post("/add-train",async(req,res)=>{
   try{
     const { train_id, train_name, departure, arrival } = req.body;
 
-    // Validation check for required fields
     if (!train_id || !train_name || !departure || !arrival) {
         return res.status(400).json({ message: "All fields are required" });
     }
@@ -154,7 +152,7 @@ app.post("/post-moisture", async (req, res) => {
   try {
     const { train_id, moisture_level, location } = req.body;
 
-    // Generate timestamp in the 'YYYY-MM-DD HH:MM:SS' format
+    
     const timestamp = new Date().toLocaleDateString('en-CA', {
       hour: '2-digit',
       minute: '2-digit',
@@ -162,7 +160,7 @@ app.post("/post-moisture", async (req, res) => {
       hour12: false
     });
 
-    // Create a new instance of moisture data
+    
     const moistureData = new moisture({
       train_id,
       moisture_level,
@@ -170,7 +168,7 @@ app.post("/post-moisture", async (req, res) => {
       timestamp
     });
 
-    // Save the data to MongoDB
+   
     await moistureData.save();
 
     res.json({
@@ -191,10 +189,10 @@ app.get("/get-moisture", async (req, res) => {
 
     const trainIdString = String(train_id);
 
-    // Parse the timestamp from the query to a Date object
+    
     const date = new Date(timestamp);
 
-    // Set the start and end range to match the entire day
+    
     const startOfDay = new Date(date.setUTCHours(0, 0, 0, 0));
     const endOfDay = new Date(date.setUTCHours(23, 59, 59, 999));
 
@@ -301,14 +299,14 @@ app.post("/user-tracking", async (req, res) => {
       return res.status(401).json({ error: "User not found" });
     }
 
-    // Find existing tracking entry
+    
     let trackingEntry = await UserTracking.findOne({ username, train_id });
     if (!trackingEntry) {
-      // Create a new tracking entry and set isTracking to true
+      
       trackingEntry = new UserTracking({ username, train_id, isTracking: true });
       await trackingEntry.save();
     } else {
-      // If the entry already exists, update isTracking to true
+      
       trackingEntry.isTracking = true;
       await trackingEntry.save();
     }
@@ -343,19 +341,19 @@ app.delete("/user-untracking", async (req, res) => {
       return res.status(400).send({ message: "Please enter both username and train id" });
     }
 
-    // Check if the user exists
+    
     const user = await signUp.findOne({ username });
     if (!user) {
       return res.status(401).json({ error: "User not found" });
     }
 
-    // Find the tracking entry to delete
+    
     const trackingEntry = await UserTracking.findOneAndDelete({ username, train_id });
     if (!trackingEntry) {
       return res.status(404).json({ message: `No tracking entry found for user ${username} and train ${train_id}.` });
     }
 
-    // Since the entry was deleted, isTracking is now false
+    
     res.json({ message: `User ${username} has stopped tracking train ${train_id}.`, isTracking: false });
   } catch (error) {
     console.error(error);
@@ -368,17 +366,17 @@ app.post("/anomaly-detected", async (req, res) => {
   try {
     const { train_id, anomaly_details } = req.body;
 
-    // Validate input
+   
     if (!train_id || !anomaly_details) {
       return res.status(400).send({ message: "Please enter both train id and anomaly details" });
     }
 
-    // Fetch users tracking the specific train
+    
     const usersTracking = await UserTracking.find({ train_id, isTracking: true });
     console.log("Users Tracking Found:", usersTracking);
 
     if (usersTracking.length > 0) {
-      // Set up email transporter once
+      
       const transporter = nodemailer.createTransport({
         service: "Gmail",
         auth: {
@@ -387,7 +385,7 @@ app.post("/anomaly-detected", async (req, res) => {
         },
       });
 
-      // Send email to each user in usersTracking
+      
       for (const trackingEntry of usersTracking) {
         const mailOptions = {
           from: process.env.USER,
@@ -403,23 +401,23 @@ app.post("/anomaly-detected", async (req, res) => {
         }
       }
 
-      // Record anomaly in the database
+      
       const now = new Date();
-      const formattedDate = now.toISOString().split("T")[0]; // YYYY-MM-DD
-      const formattedTime = now.toISOString(); // HH:MM:SS
+      const formattedDate = now.toISOString().split("T")[0];
+      const formattedTime = now.toISOString(); 
 
-      // Use findOneAndUpdate to avoid duplicate key errors for AnomalyCount
+      
       await AnomalyCount.findOneAndUpdate(
         { date: formattedDate, train_id: train_id },
-        { $inc: { count: 1 }, anomaly_details: anomaly_details }, // Increment count if it exists
-        { upsert: true, new: true } // Create a new document if none exists
+        { $inc: { count: 1 }, anomaly_details: anomaly_details }, 
+        { upsert: true, new: true } 
       );
 
-      // Update AnomalyNotify with full date and time
+      
       await AnomalyNotify.findOneAndUpdate(
-        { date: formattedTime, train_id: train_id }, // Using date as YYYY-MM-DD for grouping
-        { anomaly_details: anomaly_details, time: formattedTime }, // Store full time separately
-        { upsert: true, new: true } // Create a new document if none exists
+        { date: formattedTime, train_id: train_id }, 
+        { anomaly_details: anomaly_details, time: formattedTime }, 
+        { upsert: true, new: true } 
       );
 
       console.log("Anomaly count updated in database");
@@ -439,31 +437,28 @@ app.post("/anomaly-detected", async (req, res) => {
 
 app.get("/anomaly-detected-notify", async (req, res) => {
   try {
-    // Ensure the notifyState is initialized
+    
     await initializenotifyState();
 
-    // Get the most recent anomaly entry based on date
+    
     const latestAnomaly = await AnomalyNotify.findOne().sort({ date: -1 });
 
     if (latestAnomaly) {
       const currentDate = latestAnomaly.date;
 
-      // Fetch the last checked date from the notifyState
+      
       const notifyStateDoc = await notifyState.findOne();
 
-      // Check if notifyStateDoc is null
       if (!notifyStateDoc) {
         console.error("NotifyState document not found.");
         return res.status(500).json({ error: "NotifyState document not found." });
       }
-
-      // Check if lastCheckedDate exists and compare it with currentDate
+      
       if (!notifyStateDoc.lastCheckedDate || currentDate.toISOString() !== notifyStateDoc.lastCheckedDate.toISOString()) {
-        // Update the last checked date in the notifyState
+        
         notifyStateDoc.lastCheckedDate = currentDate;
         await notifyStateDoc.save();
 
-        // Respond with the new anomaly details
         res.json({
           message: "Anomaly notification",
           train_id: latestAnomaly.train_id,
@@ -471,7 +466,6 @@ app.get("/anomaly-detected-notify", async (req, res) => {
           date: latestAnomaly.date,
         });
       } else {
-        // If the date hasn't changed, respond with a message
         res.json({ message: "No new anomalies detected." });
       }
     } else {
@@ -479,7 +473,7 @@ app.get("/anomaly-detected-notify", async (req, res) => {
     }
   } catch (error) {
     console.error("Error retrieving anomaly:", error);
-    res.status(500).json({ error: error.message }); // More informative error message
+    res.status(500).json({ error: error.message });
   }
 });
 
@@ -489,7 +483,6 @@ app.get("/anomaly-detected-notify", async (req, res) => {
 app.get("/get-Anamoly-count",async(req,res)=>{
   try{
     const {train_id}=req.query;
-    //const results = await AnomalyCount.find({ name: new RegExp('^' + query, 'i'),email });
     const results = await AnomalyCount.find({train_id});
     res.json(results);
   }
