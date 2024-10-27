@@ -448,13 +448,13 @@ app.get("/anomaly-detected-notify", async (req, res) => {
       const currentDate = latestAnomaly.date;
 
       // Fetch the last checked date from the notifyState
-      const notifyState = await notifyState.findOne();
+      const notifyStateDoc = await notifyState.findOne();
 
       // Check if the current date is different from the last checked date
-      if (notifyState.lastCheckedDate === null || currentDate !== notifyState.lastCheckedDate.toISOString()) {
+      if (notifyStateDoc.lastCheckedDate === null || currentDate !== notifyStateDoc.lastCheckedDate.toISOString()) {
         // Update the last checked date in the notifyState
-        notifyState.lastCheckedDate = currentDate;
-        await notifyState.save();
+        notifyStateDoc.lastCheckedDate = currentDate;
+        await notifyStateDoc.save();
 
         // Respond with the new anomaly details
         res.json({
