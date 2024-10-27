@@ -34,6 +34,12 @@ app.use(
     credentials: true,
   })
 );
+const initializeNotificationState = async () => {
+  const state = await NotificationState.findOne();
+  if (!state) {
+    await NotificationState.create({ lastCheckedDate: null });
+  }
+};
 
 app.get("/", (req, res) => {
   res.send("Welcome to the home page");
@@ -431,18 +437,37 @@ app.post("/anomaly-detected", async (req, res) => {
 
 app.get("/anomaly-detected-notify", async (req, res) => {
   try {
+    // Ensure the NotificationState is initialized
+    await initializeNotificationState();
+
     // Get the most recent anomaly entry based on date
     const latestAnomaly = await AnomalyNotify.findOne().sort({ date: -1 });
 
     if (latestAnomaly) {
-      res.json({
-        message: "Anomaly notification",
-        train_id: latestAnomaly.train_id,
-        anomaly_details: latestAnomaly.anomaly_details,
-        date: latestAnomaly.date,
-      });
+      const currentDate = latestAnomaly.date;
+
+      // Fetch the last checked date from the NotificationState
+      const notificationState = await NotificationState.findOne();
+
+      // Check if the current date is different from the last checked date
+      if (notificationState.lastCheckedDate === null || currentDate !== notificationState.lastCheckedDate.toISOString()) {
+        // Update the last checked date in the NotificationState
+        notificationState.lastCheckedDate = currentDate;
+        await notificationState.save();
+
+        // Respond with the new anomaly details
+        res.json({
+          message: "Anomaly notification",
+          train_id: latestAnomaly.train_id,
+          anomaly_details: latestAnomaly.anomaly_details,
+          date: latestAnomaly.date,
+        });
+      } else {
+        // If the date hasn't changed, respond with a message
+        res.json({ message: "No new anomalies detected." });
+      }
     } else {
-      res.json({ message: "No new anomalies detected." });
+      res.json({ message: "No anomalies detected." });
     }
   } catch (error) {
     console.error("Error retrieving anomaly:", error);
