@@ -409,7 +409,7 @@ app.post("/anomaly-detected", async (req, res) => {
 
       // Update AnomalyNotify with full date and time
       await AnomalyNotify.findOneAndUpdate(
-        { date: formattedDate, train_id: train_id }, // Using date as YYYY-MM-DD for grouping
+        { date: formattedTime, train_id: train_id }, // Using date as YYYY-MM-DD for grouping
         { anomaly_details: anomaly_details, time: formattedTime }, // Store full time separately
         { upsert: true, new: true } // Create a new document if none exists
       );
