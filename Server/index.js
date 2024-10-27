@@ -439,7 +439,7 @@ app.post("/anomaly-detected", async (req, res) => {
 app.get("/anomaly-detected-notify", async (req, res) => {
   try {
     // Ensure the notifyState is initialized
-    //await initializenotifyState();
+    await initializenotifyState();
 
     // Get the most recent anomaly entry based on date
     const latestAnomaly = await AnomalyNotify.findOne().sort({ date: -1 });
@@ -450,8 +450,14 @@ app.get("/anomaly-detected-notify", async (req, res) => {
       // Fetch the last checked date from the notifyState
       const notifyStateDoc = await notifyState.findOne();
 
-      // Check if the current date is different from the last checked date
-      if (notifyStateDoc.lastCheckedDate === null || currentDate !== notifyStateDoc.lastCheckedDate.toISOString()) {
+      // Check if notifyStateDoc is null
+      if (!notifyStateDoc) {
+        console.error("NotifyState document not found.");
+        return res.status(500).json({ error: "NotifyState document not found." });
+      }
+
+      // Check if lastCheckedDate exists and compare it with currentDate
+      if (!notifyStateDoc.lastCheckedDate || currentDate.toISOString() !== notifyStateDoc.lastCheckedDate.toISOString()) {
         // Update the last checked date in the notifyState
         notifyStateDoc.lastCheckedDate = currentDate;
         await notifyStateDoc.save();
@@ -472,9 +478,10 @@ app.get("/anomaly-detected-notify", async (req, res) => {
     }
   } catch (error) {
     console.error("Error retrieving anomaly:", error);
-    res.status(500).json({ error: "Error retrieving anomaly details" });
+    res.status(500).json({ error: error.message }); // More informative error message
   }
 });
+
 
 
 
