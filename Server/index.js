@@ -418,17 +418,17 @@ app.post("/anomaly-detected", async (req, res) => {
 
 
 
-
 app.get("/anomaly-detected-notify", async (req, res) => {
   try {
-    // Get the most recent anomaly entry based on date and train ID if specified
+    // Get the most recent anomaly entry based on date
     const latestAnomaly = await AnomalyCount.findOne().sort({ date: -1 });
 
-    if (latestAnomaly && latestAnomaly.anomaly_details) {
+    if (latestAnomaly) {
       res.json({
         message: "Anomaly notification",
         train_id: latestAnomaly.train_id,
         anomaly_details: latestAnomaly.anomaly_details,
+        date: latestAnomaly.date,
       });
     } else {
       res.json({ message: "No new anomalies detected." });
@@ -438,6 +438,7 @@ app.get("/anomaly-detected-notify", async (req, res) => {
     res.status(500).json({ error: "Error retrieving anomaly details" });
   }
 });
+
 
 
 app.get("/get-Anamoly-count",async(req,res)=>{
