@@ -398,7 +398,7 @@ app.post("/anomaly-detected", async (req, res) => {
       // Record anomaly in the database
       const now = new Date();
       const formattedDate = now.toISOString().split("T")[0]; // YYYY-MM-DD
-      const formattedTime = now.toTimeString().split(" ")[0]; // HH:MM:SS
+      const formattedTime = now.toISOString(); // HH:MM:SS
 
       // Use findOneAndUpdate to avoid duplicate key errors for AnomalyCount
       await AnomalyCount.findOneAndUpdate(
