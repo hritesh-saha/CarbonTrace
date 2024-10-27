@@ -18,6 +18,7 @@ const moisture=require("./Schema/moisture_data");
 const AnomalyCount=require("./Schema/anamolyCount");
 const trainAvail=require("./Schema/trainAvailable");
 const AnomalyNotify=require("./Schema/anomalyNotify");
+const notifyState=require("./Schema/notificationState");
 const db = mongoose.connection;
 
 
@@ -34,10 +35,10 @@ app.use(
     credentials: true,
   })
 );
-const initializeNotificationState = async () => {
-  const state = await NotificationState.findOne();
+const initializenotifyState = async () => {
+  const state = await notifyState.findOne();
   if (!state) {
-    await NotificationState.create({ lastCheckedDate: null });
+    await notifyState.create({ lastCheckedDate: null });
   }
 };
 
@@ -437,8 +438,8 @@ app.post("/anomaly-detected", async (req, res) => {
 
 app.get("/anomaly-detected-notify", async (req, res) => {
   try {
-    // Ensure the NotificationState is initialized
-    await initializeNotificationState();
+    // Ensure the notifyState is initialized
+    await initializenotifyState();
 
     // Get the most recent anomaly entry based on date
     const latestAnomaly = await AnomalyNotify.findOne().sort({ date: -1 });
@@ -446,14 +447,14 @@ app.get("/anomaly-detected-notify", async (req, res) => {
     if (latestAnomaly) {
       const currentDate = latestAnomaly.date;
 
-      // Fetch the last checked date from the NotificationState
-      const notificationState = await NotificationState.findOne();
+      // Fetch the last checked date from the notifyState
+      const notifyState = await notifyState.findOne();
 
       // Check if the current date is different from the last checked date
-      if (notificationState.lastCheckedDate === null || currentDate !== notificationState.lastCheckedDate.toISOString()) {
-        // Update the last checked date in the NotificationState
-        notificationState.lastCheckedDate = currentDate;
-        await notificationState.save();
+      if (notifyState.lastCheckedDate === null || currentDate !== notifyState.lastCheckedDate.toISOString()) {
+        // Update the last checked date in the notifyState
+        notifyState.lastCheckedDate = currentDate;
+        await notifyState.save();
 
         // Respond with the new anomaly details
         res.json({
